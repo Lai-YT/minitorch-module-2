@@ -80,9 +80,6 @@ def broadcast_index(
         big_shape : tensor shape of bigger tensor
         shape : tensor shape of smaller tensor
         out_index : multidimensional index of smaller tensor
-
-    Returns:
-        None
     """
     for i in range(len(shape)):
         if shape[i] > 1:
@@ -112,7 +109,7 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     for s1, s2 in zip_longest(reversed(shape1), reversed(shape2), fillvalue=1):
         if s1 != s2 and s1 != 1 and s2 != 1:
             raise IndexingError(f"Cannot broadcast shapes {shape1} and {shape2}.")
-        out_shape.append(max(s1, s2))
+        out_shape.append(int(max(s1, s2)))
     return tuple(reversed(out_shape))
 
 
@@ -235,8 +232,8 @@ class TensorData:
 
         return TensorData(
             self._storage,
-            tuple(self._shape[i] for i in order),
-            tuple(self._strides[i] for i in order),
+            tuple(int(self._shape[i]) for i in order),
+            tuple(int(self._strides[i]) for i in order),
         )
 
     def to_string(self) -> str:
