@@ -8,6 +8,7 @@ import numpy as np
 import numpy.typing as npt
 from numpy import array, float64
 from typing_extensions import TypeAlias
+from itertools import zip_longest
 
 from .operators import prod
 
@@ -83,8 +84,11 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    for i in range(len(shape)):
+        if shape[i] > 1:
+            out_index[i] = big_index[i + (len(big_shape) - len(shape))]
+        else:
+            out_index[i] = 0  # broadcasted dimension
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -101,8 +105,15 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # Rule 1: Any dimension of size 1 can be zipped with dimensions of size n > 1 by assuming the dimension is copied n times.
+    # Rule 2: Extra dimensions of shape 1 can be added to a tensor to ensure the same number of dimensions with another tensor.
+    # Rule 3: Any extra dimension of size 1 can only be implicitly added on the left side of the shape.
+    out_shape = []
+    for s1, s2 in zip_longest(reversed(shape1), reversed(shape2), fillvalue=1):
+        if s1 != s2 and s1 != 1 and s2 != 1:
+            raise IndexingError(f"Cannot broadcast shapes {shape1} and {shape2}.")
+        out_shape.append(max(s1, s2))
+    return tuple(reversed(out_shape))
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
