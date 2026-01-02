@@ -4,6 +4,7 @@ Be sure you have minitorch installed in you Virtual Env.
 """
 
 import minitorch
+from minitorch.tensor import Tensor
 
 
 def RParam(*shape):
@@ -21,8 +22,9 @@ class Network(minitorch.Module):
         self.layer3 = Linear(hidden_layers, 1)
 
     def forward(self, x):
-        # TODO: Implement for Task 2.5.
-        raise NotImplementedError("Need to implement for Task 2.5")
+        middle = self.layer1.forward(x).relu()
+        end = self.layer2.forward(middle).relu()
+        return self.layer3.forward(end).sigmoid()
 
 
 class Linear(minitorch.Module):
@@ -32,9 +34,22 @@ class Linear(minitorch.Module):
         self.bias = RParam(out_size)
         self.out_size = out_size
 
-    def forward(self, x):
-        # TODO: Implement for Task 2.5.
-        raise NotImplementedError("Need to implement for Task 2.5")
+    def forward(self, x: Tensor):
+        batch, in_size = x.shape
+        # View weights as (1, in_size, out_size)
+        weights_view = self.weights.value.view(1, in_size, self.out_size)
+
+        # View input as (batch, in_size, 1)
+        x_view = x.view(batch, in_size, 1)
+
+        # Broadcast multiply -> (batch, in_size, out_size)
+        temp = weights_view * x_view
+
+        # Sum over input dimension -> (batch, out_size)
+        temp_sum = temp.sum(1).view(batch, self.out_size)
+
+        # Add bias -> (batch, out_size)
+        return temp_sum + self.bias.value.view(1, self.out_size)
 
 
 def default_log_fn(epoch, total_loss, correct, losses):
